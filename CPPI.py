@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
-class CPPI(object):
+from strategy import PortfolioStrategy
+class CPPI(PortfolioStrategy):
     """Implementing vanilla CPPI strategy
     
     The investor have a target floor value that grows with risk-free rate
@@ -57,36 +57,14 @@ class CPPI(object):
 
             self.nav[t] = self.nav[t-1] + bond_holding*bond_returns[t] + equity_holding*equity_returns[t]
             
-    def plot(self, choice = 'nav'):
-        indices = range(0,self.num_periods)
-        def plot_nav(): 
-            plt.plot(indices,self.nav)
-            plt.xlabel('time')
-            plt.show()
-            
-        def plot_bond_and_equity():
-            p_bond = plt.bar(indices, self.bond_holdings, color = 'blue')
-            p_equity = plt.bar(indices, self.equity_holdings, bottom = self.bond_holdings, color = 'red')
-            
-            plt.legend((p_bond,p_equity),('Bond Value','Equity Value'),loc = 3)
-            plt.xlabel('time')
-            plt.show()
-            
-        def plot_floor_and_cushion():
-            p_floor = plt.bar(indices, self.floor_ts, color = 'blue')
-            p_cushion = plt.bar(indices, self.nav - self.floor_ts, bottom = self.floor_ts, color = 'red')
-            plt.legend((p_floor,p_cushion),('Floor Value','Cushion Value'),loc = 3)
-            plt.xlabel('time')
-            plt.show()
-        switch = {'nav':plot_nav, 'bond_and_equity' : plot_bond_and_equity, 'floor_and_cushion':plot_floor_and_cushion}
-        switch.get(choice,plot_nav)()
-        
-simulated_bond_returns = np.array([2,3,4,3,2,1,2,3,4,3])/100
-simulated_equity_returns = np.array([9,-2,8,-1,7,-3,6,-2,5,0])/100
-multiple = 0.5
-initial_floor = 0.8
 
-cppi = CPPI(simulated_equity_returns,simulated_bond_returns,initial_floor,multiple)
-cppi.plot()
-cppi.plot('bond_and_equity')
-cppi.plot('floor_and_cushion')
+if __name__ == '__main__':
+    simulated_bond_returns = np.array([2,3,4,3,2,1,2,3,4,3])/100
+    simulated_equity_returns = np.array([9,-2,8,-1,7,-3,6,-2,5,0])/100
+    multiple = 0.5
+    initial_floor = 0.8
+
+    cppi = CPPI(simulated_equity_returns,simulated_bond_returns,initial_floor,multiple)
+    cppi.plot()
+    cppi.plot('bond_and_equity')
+    cppi.plot('floor_and_cushion')
