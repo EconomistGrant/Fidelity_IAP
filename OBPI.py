@@ -77,7 +77,7 @@ class OBPI(object):
 			tmp = self.option_price(S, mid, sigma, r, tao)[0] / mid
 			
 			if abs(tmp - thres) < 1e-7:
-				print("sucessfully")
+				#print("sucessfully")
 				return mid
 			if tmp < thres:
 				upper = mid
