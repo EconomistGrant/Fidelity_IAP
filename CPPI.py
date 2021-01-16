@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from strategy import PortfolioStrategy
 class CPPI(PortfolioStrategy):
-    """Implementing vanilla CPPI strategy
+    """Implementing Constant Proportion Portfolio Insurance
     
     The investor have a target floor value that grows with risk-free rate
     Start with 1, at any time, he will determine the floor value of next period by "guessing" the risk-free rate 
@@ -19,6 +19,7 @@ class CPPI(PortfolioStrategy):
         bond_returns:   a numpy array of risk-free rates
         floor:          initial floor as a proportion of initial portfolio value
         multiple:       proportion of cushion held in equity
+        max_leverage:   the maximum leverage ratio. With portfolio value W(t), b*W(t) is the maximum equity exposure
 
         floor_ts:       np.array of floor values growing with risk-free rate
         equity_holdings:np.array of equity value hold 
@@ -29,11 +30,13 @@ class CPPI(PortfolioStrategy):
                  equity_returns:np.array,
                  bond_returns: np.array,
                  initial_floor: float,
-                 multiple: float):
+                 multiple: float,
+                 max_leverage: float):
         self.initial_floor = initial_floor
         self.multiple = multiple
         self.bond_returns = bond_returns
         self.equity_returns = equity_returns
+        self.max_leverage = max_leverage
 
         assert len(equity_returns) == len(bond_returns), 'Inputs should have the same dimension'
         self.num_periods = len(equity_returns)
@@ -50,10 +53,8 @@ class CPPI(PortfolioStrategy):
             prev_floor = self.floor_ts[t-1]
             #TODO: consider different types of floor strategy
             cushion = prev_nav - prev_floor
-            if cushion > 0:
-                equity_holding = cushion * self.multiple
-            else: 
-                equity_holding = 0
+            
+            equity_holding = max(0,cushion * self.multiple, self.max_leverage * self.nav[t-1])
             bond_holding = prev_nav - equity_holding
             
             self.equity_holdings[t] = equity_holding

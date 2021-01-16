@@ -6,8 +6,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import numpy as np
 import matplotlib.pyplot as plt
 from strategy import PortfolioStrategy
-class DynamicCPPI(PortfolioStrategy):
-    """Implementing dynamic CPPI strategy
+class TIPP(PortfolioStrategy):
+    """Implementing Time-Invariant Portfolio Protection strategy
 
     Compared with vanilla CPPI strategy, the floor value will not increase at the risk-free rate, but 
     rather determined based on a fixed proportion of the maximum portfolio value ever reached        
@@ -17,7 +17,8 @@ class DynamicCPPI(PortfolioStrategy):
         bond_returns:   a numpy array of risk-free rates
         floor:          floor as a proportion of maximum portfolio value ever reached
         multiple:       proportion of cushion held in equity
-        
+        max_leverage:   the maximum leverage ratio. With portfolio value W(t), b*W(t) is the maximum equity exposure
+
         floor_ts:       np.array of floor values growing with risk-free rate
         equity_holdings:np.array of equity value hold 
         bond_holdings:  np.array of bond value hold
@@ -26,11 +27,13 @@ class DynamicCPPI(PortfolioStrategy):
                  equity_returns:np.array,
                  bond_returns: np.array,
                  floor: float,
-                 multiple: float):
+                 multiple: float,
+                 max_leverage: float):
         self.floor = floor
         self.multiple = multiple
         self.bond_returns = bond_returns
         self.equity_returns = equity_returns
+        self.max_leverage = max_leverage
         
         assert len(equity_returns) == len(bond_returns), 'Inputs should have the same dimension'
         self.num_periods = len(equity_returns)
@@ -48,10 +51,8 @@ class DynamicCPPI(PortfolioStrategy):
             prev_floor = self.floor_ts[t-1]
             #TODO: consider different types of floor strategy
             cushion = prev_nav - prev_floor
-            if cushion > 0:
-                equity_holding = cushion * self.multiple
-            else: 
-                equity_holding = 0
+            
+            equity_holding = max(0,cushion * self.multiple, self.max_leverage * self.nav[t-1])
             bond_holding = prev_nav - equity_holding
             
             self.equity_holdings[t] = equity_holding
