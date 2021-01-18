@@ -127,10 +127,9 @@ class gCPPI(PortfolioStrategy):
             exposure = max(0, min(cushion * multiple, self.max_leverage * prev_nav))
             rf_holding = prev_nav - exposure
             
-            
+            """
             print("t:" +str(t))
             print(multiple)
-            """
             print(floor)
             print(cushion)
             print(exposure)
