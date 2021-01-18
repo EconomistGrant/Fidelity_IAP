@@ -12,7 +12,10 @@ class CPPI(PortfolioStrategy):
     The investor have a target floor value that grows with risk-free rate
     Start with 1, at any time, he will determine the floor value of next period by "guessing" the risk-free rate 
     of next period, and then determine cushion and amount of equity shares accordingly
-        
+    
+    The base class includes different ways to calculate the constant at a given time. Inheritance class are characterized
+    by different ways to calculate floor.
+
     Attributes:
     -----------
         equity_returns: a numpy array of risky returns
@@ -29,10 +32,10 @@ class CPPI(PortfolioStrategy):
     def __init__(self,
                  equity_returns:np.array,
                  bond_returns: np.array,
-                 initial_floor: float,
+                 floor: float,
                  multiple: float,
-                 max_leverage: float):
-        self.initial_floor = initial_floor
+                 max_leverage: float = 1.0):
+        self.initial_floor = floor
         self.multiple = multiple
         self.bond_returns = bond_returns
         self.equity_returns = equity_returns
@@ -54,7 +57,7 @@ class CPPI(PortfolioStrategy):
             #TODO: consider different types of floor strategy
             cushion = prev_nav - prev_floor
             
-            equity_holding = max(0,cushion * self.multiple, self.max_leverage * self.nav[t-1])
+            equity_holding = max(0,min(cushion * self.multiple, self.max_leverage * self.nav[t-1]))
             bond_holding = prev_nav - equity_holding
             
             self.equity_holdings[t] = equity_holding
@@ -71,9 +74,10 @@ if __name__ == '__main__':
     simulated_bond_returns = np.array([2,3,4,3,2,1,2,3,4,3])/100
     simulated_equity_returns = np.array([9,-2,8,-1,7,-3,6,-2,5,0])/100
     multiple = 0.5
-    initial_floor = 0.8
+    floor = 0.8
 
-    cppi = CPPI(simulated_equity_returns,simulated_bond_returns,initial_floor,multiple)
-    cppi.plot()
-    cppi.plot('bond_and_equity')
-    cppi.plot('floor_and_cushion')
+
+    cppi = CPPI(simulated_equity_returns,simulated_bond_returns,floor,multiple)
+    print(cppi.nav[-1])
+
+

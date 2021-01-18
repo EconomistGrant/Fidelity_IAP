@@ -6,7 +6,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import numpy as np
 import matplotlib.pyplot as plt
 from strategy import PortfolioStrategy
-class TIPP(PortfolioStrategy):
+class DynamicFloorCPPI(PortfolioStrategy):
     """Implementing Time-Invariant Portfolio Protection strategy
 
     Compared with vanilla CPPI strategy, the floor value will not increase at the risk-free rate, but 
@@ -28,7 +28,7 @@ class TIPP(PortfolioStrategy):
                  bond_returns: np.array,
                  floor: float,
                  multiple: float,
-                 max_leverage: float):
+                 max_leverage: float = 1.0):
         self.floor = floor
         self.multiple = multiple
         self.bond_returns = bond_returns
@@ -52,7 +52,7 @@ class TIPP(PortfolioStrategy):
             #TODO: consider different types of floor strategy
             cushion = prev_nav - prev_floor
             
-            equity_holding = max(0,cushion * self.multiple, self.max_leverage * self.nav[t-1])
+            equity_holding = max(0,min(cushion * self.multiple, self.max_leverage * self.nav[t-1]))
             bond_holding = prev_nav - equity_holding
             
             self.equity_holdings[t] = equity_holding
@@ -65,13 +65,10 @@ class TIPP(PortfolioStrategy):
             self.floor_ts[t] = self.max_nav * floor            
 
 if __name__ == '__main__':
-    simulated_bond_returns = np.array([-2,-3,-4,-3,-2,-1,-2,-3,-4,-3])/100
-    simulated_equity_returns = np.array([9,-2,-8,-1,-7,-3,-6,-2,-5,0])/100
+    simulated_bond_returns = np.array([2,3,4,3,2,1,2,3,4,3])/100
+    simulated_equity_returns = np.array([9,-2,8,-1,7,-3,6,-2,5,0])/100
     multiple = 0.5
     floor = 0.8
 
-    dcppi = DynamicCPPI(simulated_equity_returns,simulated_bond_returns,floor,multiple)
-    dcppi.plot()
-    dcppi.plot('bond_and_equity')
-    dcppi.plot('floor_and_cushion')
-    print(dcppi.equity_holdings)
+    dcppi = DynamicFloorCPPI(simulated_equity_returns,simulated_bond_returns,floor,multiple)
+    print(dcppi.nav)
