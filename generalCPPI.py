@@ -7,6 +7,8 @@ if _path not in sys.path:
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import scipy.stats as stats
+
 from strategy import PortfolioStrategy
 class gCPPI(PortfolioStrategy):
     """General CPPI class that is going to replace old version, give the flexibility to use different 
@@ -39,20 +41,23 @@ class gCPPI(PortfolioStrategy):
 
 
     def run(self, multiple_strategy, floor_strategy,**kwargs):
-        assert multiple_strategy in ["vanilla", "constant", "EWMA", "GARCH", "input_vol"]
+        assert multiple_strategy in ["vanilla", "constant", "time-variant", "input_vol"]
         assert floor_strategy in ["vanilla","dynamic","double","dynamic double","d2","dd"]
 
         if multiple_strategy in ["vanilla","constant"]:
             multiple = kwargs.get("multiple",5)
             def _get_multiple(t):
                 return multiple
-        elif multiple_strategy == "input_vol":
+        elif multiple_strategy in ["time-variant","input_vol"]:
             assert "vol" in kwargs, 'input volatility array as vol'
-            vol = kwargs.get("vol",None)
-            assert len(vol) == len(risky_asset_returns), "vol and asset return should have same dimension"
-
-
-
+            self.vol = kwargs.get("vol",None)
+            assert len(self.vol) == len(self.risky_asset_returns), "vol and asset return should have same dimension"
+            level = kwargs.get("level",0.01)
+            def _get_multiple(t):
+                σ = self.vol[t-1]
+                critical_value = σ*stats.norm.ppf(level)
+                return 1 / abs(critical_value)        
+    
         # return self.floor[t-1] which is the end of (t-1) floor value
         if floor_strategy == "vanilla":
             floor_ratio = kwargs.get("floor",0.7)
@@ -122,9 +127,10 @@ class gCPPI(PortfolioStrategy):
             exposure = max(0, min(cushion * multiple, self.max_leverage * prev_nav))
             rf_holding = prev_nav - exposure
             
-            """
+            
             print("t:" +str(t))
             print(multiple)
+            """
             print(floor)
             print(cushion)
             print(exposure)
@@ -139,9 +145,11 @@ class gCPPI(PortfolioStrategy):
 if __name__ == '__main__':
     simulated_bond_returns = np.array([-2,-3,-4,-3,-2,-1,2,3,4,3])/100
     simulated_equity_returns = np.array([-9,-2,-8,-1,-7,-3,-6,-2,5,0])/100
-    multiple = 0.5
+    
+    multiple = 4
     floor = 0.8
-
+    
+    """
     cppi = gCPPI(simulated_equity_returns,simulated_bond_returns)
     cppi.run(multiple_strategy = "constant", floor_strategy = "vanilla",multiple = multiple, floor = floor)
     print(cppi.nav[-1])
@@ -153,4 +161,8 @@ if __name__ == '__main__':
     
     d2cppi = gCPPI(simulated_equity_returns,simulated_bond_returns)
     d2cppi.run(multiple_strategy = "constant", floor_strategy = "d2",multiple = 5, floor = floor, margin = 0.1)
+    """
+    vol = np.array([9,10,11,10,10,5,5,5,20,20])/100
+    volcppi = gCPPI(simulated_equity_returns,simulated_bond_returns)
+    volcppi.run(multiple_strategy = "input_vol", floor_strategy = "vanilla",multiple = multiple, floor = floor,vol = vol)
     
