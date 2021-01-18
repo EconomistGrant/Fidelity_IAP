@@ -39,26 +39,33 @@ class gCPPI(PortfolioStrategy):
 
 
     def run(self, multiple_strategy, floor_strategy,**kwargs):
-        assert multiple_strategy in ["vanilla","constant", "EWMA", "GARCH"]
+        assert multiple_strategy in ["vanilla", "constant", "EWMA", "GARCH", "input_vol"]
         assert floor_strategy in ["vanilla","dynamic","double","dynamic double","d2","dd"]
 
-        if multiple_strategy == "vanilla" or "constant":
+        if multiple_strategy in ["vanilla","constant"]:
             multiple = kwargs.get("multiple",5)
             def _get_multiple(t):
                 return multiple
+        elif multiple_strategy == "input_vol":
+            assert "vol" in kwargs, 'input volatility array as vol'
+            vol = kwargs.get("vol",None)
+            assert len(vol) == len(risky_asset_returns), "vol and asset return should have same dimension"
+
+
 
         # return self.floor[t-1] which is the end of (t-1) floor value
         if floor_strategy == "vanilla":
-            floor_ratio = kwargs.get("floor",0.8)
+            floor_ratio = kwargs.get("floor",0.7)
             def _get_floor(t):
                 #print("cppi")
                 if t == 1:
                     self.floor[0] = floor_ratio
-                self.floor[t] = self.floor[t-1] * (1+self.rf_asset_returns[t])
+                    return self.floor[0]
+                self.floor[t-1] = self.floor[t-2] * (1+self.rf_asset_returns[t-1])
                 #print(self.floor[t-1] * (1+self.rf_asset_returns[t]))
                 return self.floor[t-1]
         elif floor_strategy == "dynamic":
-            floor_ratio = kwargs.get("floor",0.8)
+            floor_ratio = kwargs.get("floor",0.7)
             def _get_floor(t):
                 #print("dcppi")
                 if t == 1:
@@ -66,16 +73,52 @@ class gCPPI(PortfolioStrategy):
                     return self.floor[0]
                 self.floor[t-1] = max(self.floor[t-2],self.nav[t-1]*floor_ratio)
                 return self.floor[t-1]
-
-
+        elif floor_strategy == "double":
+            self.floor_ratio = kwargs.get("floor", 0.7)
+            self.margin_ratio = kwargs.get("margin",0.1)
+            def _get_floor(t):
+                if t == 1:
+                    self.floor[0] = self.floor_ratio
+                    self.margin = np.zeros(self.num_periods)
+                    self.margin[0] = self.margin_ratio
+                    self.cushion_threshold = (1 - self.floor_ratio - self.margin_ratio) / 2
+                    return self.floor[t-1] + self.margin[t-1]
+                self.floor[t-1] = self.floor[t-2] * self.rf_asset_returns[t-1]
+                self.margin[t-1] = self.floor[t-2] * self.rf_asset_returns[t-1]
+                cushion = self.nav[t-1] - self.floor[t-1] - self.margin[t-1]
+                if cushion < self.cushion_threshold:
+                    self.margin[t-1] = self.margin[t-1] / 2
+                    self.cushion_threshold = self.cushion_threshold / 2
+                    self.margin_ratio = self.margin_ratio / 2
+                    #print(self.margin_ratio)
+                return self.floor[t-1] + self.margin[t-1]
+        elif floor_strategy in ["dynamic double", "d2", "dd"]:
+            self.floor_ratio = kwargs.get("floor", 0.7)
+            self.margin_ratio = kwargs.get("margin",0.1)
+            def _get_floor(t):
+                if t == 1:
+                    self.floor[0] = self.floor_ratio
+                    self.margin = np.zeros(self.num_periods)
+                    self.margin[0] = self.margin_ratio
+                    self.cushion_threshold = (1 - self.floor_ratio - self.margin_ratio) / 2
+                    return self.floor[t-1] + self.margin[t-1]
+                self.floor[t-1] = max(self.floor[t-2],self.nav[t-1]*self.floor_ratio)
+                self.margin[t-1] = max(self.margin[t-2],self.nav[t-1]*self.margin_ratio)
+                cushion = self.nav[t-1] - self.floor[t-1] - self.margin[t-1]
+                if cushion < self.cushion_threshold:
+                    self.margin[t-1] = self.margin[t-1] / 2
+                    self.cushion_threshold = self.cushion_threshold / 2
+                    self.margin_ratio = self.margin_ratio / 2
+                    #print(self.margin_ratio)
+                return self.floor[t-1] + self.margin[t-1]
 
         for t in range(1,self.num_periods):
-            floor = _get_floor(t)
+            effective_floor = _get_floor(t)
             multiple = _get_multiple(t)
             
             prev_nav = self.nav[t-1]
 
-            cushion = prev_nav - floor
+            cushion = prev_nav - effective_floor
             exposure = max(0, min(cushion * multiple, self.max_leverage * prev_nav))
             rf_holding = prev_nav - exposure
             
@@ -94,8 +137,8 @@ class gCPPI(PortfolioStrategy):
 
 
 if __name__ == '__main__':
-    simulated_bond_returns = np.array([2,3,4,3,2,1,2,3,4,3])/100
-    simulated_equity_returns = np.array([9,-2,8,-1,7,-3,6,-2,5,0])/100
+    simulated_bond_returns = np.array([-2,-3,-4,-3,-2,-1,2,3,4,3])/100
+    simulated_equity_returns = np.array([-9,-2,-8,-1,-7,-3,-6,-2,5,0])/100
     multiple = 0.5
     floor = 0.8
 
@@ -107,3 +150,7 @@ if __name__ == '__main__':
     dcppi = gCPPI(simulated_equity_returns,simulated_bond_returns)
     dcppi.run(multiple_strategy = "constant", floor_strategy = "dynamic",multiple = multiple, floor = floor)
     print(dcppi.nav)
+    
+    d2cppi = gCPPI(simulated_equity_returns,simulated_bond_returns)
+    d2cppi.run(multiple_strategy = "constant", floor_strategy = "d2",multiple = 5, floor = floor, margin = 0.1)
+    
