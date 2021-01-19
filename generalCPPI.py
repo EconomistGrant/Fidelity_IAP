@@ -143,14 +143,14 @@ class gCPPI(object):
             self.rf_holding[t] = rf_holding
             self.nav[t] = self.nav[t-1] + rf_holding * self.rf_asset_returns[t] + exposure * self.risky_asset_returns[t]
 
-    def plot(self, choice = 'nav',indices = None):
+    def plot(self, choice = 'nav',indices = None, percent = True):
         if indices is None:
             indices = np.array(range(self.num_periods))
         def plot_nav(): 
             plt.plot(indices,self.nav)
             plt.show()
             
-        def plot_bond_and_equity(percent = True):
+        def plot_bond_and_equity(percent = percent):
             rf_holding = self.rf_holding[1:]
             exposure = self.exposure[1:]
             if percent:
