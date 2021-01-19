@@ -169,7 +169,7 @@ class gCPPI(PortfolioStrategy):
             plt.show()
 
 
-        switch = {'nav':plot_nav, 'bond_and_equity' : plot_bond_and_equity, 'floor_and_cushion':plot_floor_and_cushion, 'floor_and_margin_and_cushion',plot_floor_and_margin_and_cushion}
+        switch = {'nav':plot_nav, 'bond_and_equity' : plot_bond_and_equity, 'floor_and_cushion':plot_floor_and_cushion, 'floor_and_margin_and_cushion':plot_floor_and_margin_and_cushion}
         switch.get(choice,plot_nav)()
 
 
