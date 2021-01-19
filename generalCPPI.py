@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import scipy.stats as stats
 
 from strategy import PortfolioStrategy
-class gCPPI(PortfolioStrategy):
+class gCPPI(object):
     """General CPPI class that is going to replace old version, give the flexibility to use different 
     floor and multiple strategies
     
@@ -139,33 +139,30 @@ class gCPPI(PortfolioStrategy):
             self.rf_holding[t] = rf_holding
             self.nav[t] = self.nav[t-1] + rf_holding * self.rf_asset_returns[t] + exposure * self.risky_asset_returns[t]
 
-    def plot(self, indices:pd.Series, choice = 'nav'):
+    def plot(self, choice = 'nav',indices = None):
+        if indices is None:
+            indices = np.array(range(self.num_periods))
         def plot_nav(): 
             plt.plot(indices,self.nav)
-            plt.xlabel('time')
             plt.show()
             
         def plot_bond_and_equity():
-            p_bond = plt.bar(indices, self.rf_holding, color = 'blue')
-            p_equity = plt.bar(indices, self.exposure, bottom = self.rf_holding, color = 'red')
-            
-            plt.legend((p_bond,p_equity),('RF Holding','Risky Holding'),loc = 3)
-            plt.xlabel('time')
+            p_bond = plt.plot(indices[1:], self.rf_holding[1:], color = 'blue', label = 'RF Holding')
+            p_equity = plt.plot(indices[1:], self.exposure[1:], color = 'red', label = 'Risky Holding')
+            plt.legend()
             plt.show()
             
         def plot_floor_and_cushion():
-            p_floor = plt.bar(indices, self.floor, color = 'blue')
-            p_cushion = plt.bar(indices, self.nav - self.floor, bottom = self.floor, color = 'red')
-            plt.legend((p_floor,p_cushion),('Floor Value','Cushion Value'),loc = 3)
-            plt.xlabel('time')
+            p_floor = plt.plot(indices[:-1], self.floor[:-1], color = 'blue', label = 'floor')
+            p_cushion = plt.plot(indices[:-1], self.nav[:-1],color = 'red', label = 'floor + cushion(nav)')
+            plt.legend()
             plt.show()
 
         def plot_floor_and_margin_and_cushion():
-            p_floor = plt.bar(indices, self.floor, color = 'blue')
-            p_cushion = plt.bar(indices, self.cushion, color = 'blue')
-            p_cushion = plt.bar(indices, self.nav - self.cushion - self.floor, bottom = self.floor, color = 'red')
-            plt.legend((p_floor,p_cushion),('Floor Value','Cushion Value'),loc = 3)
-            plt.xlabel('time')
+            p_floor = plt.plot(indices[:-1], self.floor[:-1], color = 'blue', label = 'floor')
+            p_margin = plt.plot(indices[:-1],self.margin[:-1]+self.floor[:-1], color = 'green', label = 'floor + margin')
+            p_cushion = plt.plot(indices[:-1], self.nav[:-1],color = 'red', label = 'floor + margin + cushion(nav)')
+            plt.legend()
             plt.show()
 
 
@@ -197,3 +194,5 @@ if __name__ == '__main__':
     volcppi = gCPPI(simulated_equity_returns,simulated_bond_returns)
     volcppi.run(multiple_strategy = "input_vol", floor_strategy = "vanilla",multiple = multiple, floor = floor,vol = vol)
     """
+    
+    
