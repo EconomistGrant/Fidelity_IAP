@@ -139,6 +139,38 @@ class gCPPI(PortfolioStrategy):
             self.rf_holding[t] = rf_holding
             self.nav[t] = self.nav[t-1] + rf_holding * self.rf_asset_returns[t] + exposure * self.risky_asset_returns[t]
 
+    def plot(self, indices:pd.Series, choice = 'nav',):
+        def plot_nav(): 
+            plt.plot(indices,self.nav)
+            plt.xlabel('time')
+            plt.show()
+            
+        def plot_bond_and_equity():
+            p_bond = plt.bar(indices, self.rf_holding, color = 'blue')
+            p_equity = plt.bar(indices, self.exposure, bottom = self.rf_holding, color = 'red')
+            
+            plt.legend((p_bond,p_equity),('RF Holding','Risky Holding'),loc = 3)
+            plt.xlabel('time')
+            plt.show()
+            
+        def plot_floor_and_cushion():
+            p_floor = plt.bar(indices, self.floor, color = 'blue')
+            p_cushion = plt.bar(indices, self.nav - self.floor, bottom = self.floor, color = 'red')
+            plt.legend((p_floor,p_cushion),('Floor Value','Cushion Value'),loc = 3)
+            plt.xlabel('time')
+            plt.show()
+
+        def plot_floor_and_margin_and_cushion():
+            p_floor = plt.bar(indices, self.floor, color = 'blue')
+            p_cushion = plt.bar(indices, self.cushion, color = 'blue')
+            p_cushion = plt.bar(indices, self.nav - self.cushion - self.floor, bottom = self.floor, color = 'red')
+            plt.legend((p_floor,p_cushion),('Floor Value','Cushion Value'),loc = 3)
+            plt.xlabel('time')
+            plt.show()
+
+
+        switch = {'nav':plot_nav, 'bond_and_equity' : plot_bond_and_equity, 'floor_and_cushion':plot_floor_and_cushion, 'floor_and_margin_and_cushion',plot_floor_and_margin_and_cushion}
+        switch.get(choice,plot_nav)()
 
 
 if __name__ == '__main__':
