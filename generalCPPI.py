@@ -54,9 +54,13 @@ class gCPPI(object):
             assert len(self.vol) == len(self.risky_asset_returns), "vol and asset return should have same dimension"
             level = kwargs.get("level",0.01)
             def _get_multiple(t):
+                if t == 1:
+                    self.multiple = np.zeros(self.num_periods)
                 σ = self.vol[t-1]
                 critical_value = σ*stats.norm.ppf(level)
-                return 1 / abs(critical_value)        
+                multiple = 1 / abs(critical_value)
+                self.multiple[t-1] = multiple
+                return multiple        
     
         # return self.floor[t-1] which is the end of (t-1) floor value
         if floor_strategy == "vanilla":
