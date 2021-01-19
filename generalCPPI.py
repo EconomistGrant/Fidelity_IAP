@@ -139,7 +139,7 @@ class gCPPI(PortfolioStrategy):
             self.rf_holding[t] = rf_holding
             self.nav[t] = self.nav[t-1] + rf_holding * self.rf_asset_returns[t] + exposure * self.risky_asset_returns[t]
 
-    def plot(self, indices:pd.Series, choice = 'nav',):
+    def plot(self, indices:pd.Series, choice = 'nav'):
         def plot_nav(): 
             plt.plot(indices,self.nav)
             plt.xlabel('time')
@@ -192,8 +192,8 @@ if __name__ == '__main__':
     
     d2cppi = gCPPI(simulated_equity_returns,simulated_bond_returns)
     d2cppi.run(multiple_strategy = "constant", floor_strategy = "d2",multiple = 5, floor = floor, margin = 0.1)
-    """
+    
     vol = np.array([9,10,11,10,10,5,5,5,20,20])/100
     volcppi = gCPPI(simulated_equity_returns,simulated_bond_returns)
     volcppi.run(multiple_strategy = "input_vol", floor_strategy = "vanilla",multiple = multiple, floor = floor,vol = vol)
-    
+    """

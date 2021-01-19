@@ -9,7 +9,7 @@ class PortfolioStrategy(object):
     """
     def __init__(self):
         return
-
+    """
     def plot(self, choice = 'nav'):
         indices = range(0,self.num_periods)
         def plot_nav(): 
@@ -33,3 +33,4 @@ class PortfolioStrategy(object):
             plt.show()
         switch = {'nav':plot_nav, 'bond_and_equity' : plot_bond_and_equity, 'floor_and_cushion':plot_floor_and_cushion}
         switch.get(choice,plot_nav)()
+    """
