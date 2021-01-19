@@ -151,13 +151,13 @@ class gCPPI(object):
             plt.show()
             
         def plot_bond_and_equity(percent = True):
-            rf_holding = self.rf_holding
-            exposure = self.exposure
+            rf_holding = self.rf_holding[1:]
+            exposure = self.exposure[1:]
             if percent:
-                rf_holding = rf_holding/self.nav
-                exposure = exposure/self.nav
-            p_bond = plt.plot(indices[1:], rf_holding[1:], color = 'blue', label = 'RF Holding')
-            p_equity = plt.plot(indices[1:], exposure[1:], color = 'red', label = 'Risky Holding')
+                rf_holding = rf_holding/self.nav[:-1]
+                exposure = exposure/self.nav[:-1]
+            p_bond = plt.plot(indices[1:], rf_holding, color = 'blue', label = 'RF Holding')
+            p_equity = plt.plot(indices[1:], exposure, color = 'red', label = 'Risky Holding')
             plt.legend()
             plt.show()
             
