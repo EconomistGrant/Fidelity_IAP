@@ -72,7 +72,6 @@ floor = 0.7                               #@param {type:"number"}
 
 dcppi.run(multiple_strategy = multiple_strategy, floor_strategy = floor_strategy, multiple = multiple, floor = floor)
 
-print(SR(dcppi.nav, rf_asset_return))
 dcppi.plot('nav')
 dcppi.plot('floor_and_cushion',time_index)
 dcppi.plot('bond_and_equity',time_index)
