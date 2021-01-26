@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Jan 25 17:57:33 2021
+
+@author: a
+"""
+
 import os
 import sys
 _path = os.path.dirname(os.path.abspath(__file__))
@@ -9,8 +16,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.stats as stats
 from constant_proportion import ConstantProportion
+from generalCPPI import gCPPI
 
-class CommodityCPPI(object):
+class CommodityCPPI(gCPPI):
     """A class for commodity CPPI strategy
     Compared with general CPPI (risk-free CPPI)：
     1. replace rf with commodity
@@ -19,7 +27,9 @@ class CommodityCPPI(object):
         1) 70% of Rolling 6-month peak
         2) Reset floor every 6 months
         2) After falling below floor for 3 periods, reset"""
-    def __init__(self, risky_asset_returns, commodity_returns, floor_ratio, floor_type, multiple = 5):
+    def __init__(self, risky_asset_returns, commodity_returns):
+        
+    
         assert floor_type in ['rolling peak', 'active reset', 'passive reset']
         assert len(risky_asset_returns) == len(commodity_returns)
         self.risky_asset_returns = risky_asset_returns
@@ -61,11 +71,10 @@ class CommodityCPPI(object):
         self.returns = []
         for t in range(1,self.num_periods):
             floor = self._get_floor(t)
-            multiple = self.multiple
-            cushion = self.portfolio_value[t-1] - floor
-
-            equity_exposure = max(0.8 * self.portfolio_value[t-1], min(cushion * multiple, self.portfolio_value[t-1]))
-            commodity_exposure = self.portfolio_value[t-1] - equity_exposure
+            floor_to_value = floor / self.portfolio_value[t-1]
+            cushion_to_value = 1 - floor_to_value
+            commodity_exposure = max(0,min((floor_to_value - 0.7), 0.2)) * self.portfolio_value[t-1]
+            equity_exposure = self.portfolio_value[t-1] - commodity_exposure
 
             self.equity_exposure[t] = equity_exposure
             self.commodity_exposure[t] = commodity_exposure
@@ -104,7 +113,7 @@ if __name__ == '__main__':
     
     index = data_in_range.index
     
-    gcppi = CommodityCPPI(risky_asset_return, gold_returns.values/100, 0.7,'rolling peak', multiple = 5)
+    gcppi = CommodityCPPI(risky_asset_return, gold_returns.values/100, 0.7,'rolling peak', multiple = 4)
     gcppi.run()
     #plt.plot(gcppi.floor)
     #plt.plot(commodity_cppi.portfolio_value)

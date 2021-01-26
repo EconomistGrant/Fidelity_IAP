@@ -182,3 +182,32 @@ for i in range(6):
 plt.title('next month of 6% drop in equity market')
 plt.axhline(y=0,ls="-",c="black")
 plt.xlabel('std');plt.ylabel('mean');plt.show()
+
+#%% Another way: base on general CPPI
+"""
+Specify the maximum amount of commodity allowed as a proportion of total portfolio value
+"""
+max_commodity_allowed = 0.2
+
+cppi = gCPPI(stock.values/100, gold_returns.values/100)
+cppi.run(multiple_strategy = "constant", floor_strategy = "dynamic double", multiple = 5, floor = 0.7)
+
+all_equity = ConstantProportion(np.array([1,0]),data_in_range[['Stock','Bond']].values/100)
+
+portfolio_value = all_equity.nav * (1-max_commodity_allowed) + cppi.nav * max_commodity_allowed
+commodity_exposure = cppi.rf_holding * max_commodity_allowed
+equity_exposure = all_equity.nav * (1-max_commodity_allowed) + cppi.exposure * max_commodity_allowed
+
+plt.plot(portfolio_value, label = 'portfolio')
+plt.plot(all_equity.nav, label = 'all_equity')
+plt.plot(commodity_exposure, label = 'commodity_exposure')
+plt.legend()
+print(portfolio_value[-1])
+
+
+
+
+#%% compare
+plt.plot(commodity_exposure, label = 'simplier_exposure')
+plt.plot(gcppi.commodity_exposure, label = 'complex_exposure')
+plt.legend()
