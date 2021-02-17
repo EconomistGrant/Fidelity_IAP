@@ -163,14 +163,14 @@ class gCPPI(object):
             
         def plot_floor_and_cushion():
             p_floor = plt.plot(indices[:-1], self.floor[:-1], color = 'blue', label = 'floor')
-            p_cushion = plt.plot(indices[:-1], self.nav[:-1],color = 'red', label = 'floor + cushion(nav)')
+            p_cushion = plt.plot(indices[:-1], self.nav[:-1],color = 'red', label = 'floor + cushion(total value)')
             plt.legend()
             plt.show()
 
         def plot_floor_and_margin_and_cushion():
             p_floor = plt.plot(indices[:-1], self.floor[:-1], color = 'blue', label = 'floor')
             p_margin = plt.plot(indices[:-1],self.margin[:-1]+self.floor[:-1], color = 'green', label = 'floor + margin')
-            p_cushion = plt.plot(indices[:-1], self.nav[:-1],color = 'red', label = 'floor + margin + cushion(nav)')
+            p_cushion = plt.plot(indices[:-1], self.nav[:-1],color = 'red', label = 'floor + margin + cushion(total value)')
             plt.legend()
             plt.show()
 
